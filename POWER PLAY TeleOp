@@ -1,0 +1,136 @@
+package org.firstinspires.ftc.teamcode.TeleOp;
+
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
+
+
+@TeleOp(name = "teleop2022", group = "Linear Opmode")
+
+public class teleop2022 extends LinearOpMode {
+
+    // Declare OpMode members.
+    private ElapsedTime runtime = new ElapsedTime();
+    private DcMotor leftFront = null;
+    private DcMotor rightFront = null;
+    private DcMotor leftBack = null;
+    private DcMotor rightBack = null;
+    private DcMotor raiseLeft = null;
+    private DcMotor raiseRight = null;
+    private CRServo extendArm = null;
+    private Servo gripRight = null;
+    private Servo gripLeft = null;
+
+    public void runOpMode() {
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+
+        leftFront = hardwareMap.get(DcMotor.class, "leftFront");
+        rightFront = hardwareMap.get(DcMotor.class, "rightFront");
+        leftBack = hardwareMap.get(DcMotor.class, "leftBack");
+        rightBack = hardwareMap.get(DcMotor.class, "rightBack");
+        raiseLeft = hardwareMap.get(DcMotor.class, "raiseLeft");
+        raiseRight = hardwareMap.get(DcMotor.class, "raiseRight");
+        extendArm = hardwareMap.get(CRServo.class, "extendArm");
+        gripRight = hardwareMap.get(Servo.class, "gripRight");
+        gripLeft = hardwareMap.get(Servo.class, "gripLeft");
+
+        leftFront.setDirection(DcMotor.Direction.REVERSE);
+        rightFront.setDirection(DcMotor.Direction.REVERSE);
+        leftBack.setDirection(DcMotor.Direction.FORWARD);
+        rightBack.setDirection(DcMotor.Direction.REVERSE);
+        raiseLeft.setDirection(DcMotor.Direction.FORWARD);
+        raiseRight.setDirection(DcMotor.Direction.REVERSE);
+        gripLeft.setDirection(Servo.Direction.REVERSE);
+
+        waitForStart();
+        runtime.reset();
+
+        gripLeft.setPosition(0.2);
+        gripRight.setPosition(0.2);
+
+        while (opModeIsActive()) {
+            double Threshold = .25;
+            double speed = 1;
+            double defaultPosition = 0.2;
+
+            //Gamepad 1 controls
+            if (Math.abs(gamepad1.left_stick_y) > Threshold) {
+                leftFront.setPower((gamepad1.left_stick_y) * speed);
+                leftBack.setPower((gamepad1.left_stick_y) * speed);
+            }
+            if (Math.abs(gamepad1.right_stick_y) > Threshold) {
+                rightFront.setPower((gamepad1.right_stick_y) * speed);
+                rightBack.setPower((gamepad1.right_stick_y) * speed);
+            }
+            if (Math.abs(gamepad1.right_stick_x) > 0.5) {
+                leftFront.setPower((-gamepad1.left_stick_x) * speed);
+                rightFront.setPower((gamepad1.left_stick_x) * speed);
+            }
+            if (Math.abs(gamepad1.left_stick_x) > 0.5) {
+                leftBack.setPower((gamepad1.left_stick_x) * speed);
+                rightBack.setPower((-gamepad1.left_stick_x) * speed);
+            } else {
+                leftFront.setPower(0);
+                rightFront.setPower(0);
+                leftBack.setPower(0);
+                rightBack.setPower(0);
+            }
+
+            //Gamepad 2 controls
+            if (Math.abs(gamepad2.left_stick_y) > Threshold) {
+                raiseLeft.setPower((gamepad2.left_stick_y) * speed);
+                raiseRight.setPower((gamepad2.left_stick_y) * speed);
+            }
+            else{
+                raiseLeft.setPower(0);
+                raiseRight.setPower(0);
+            }
+            if (Math.abs(gamepad2.right_stick_y) > Threshold) {
+                extendArm.setPower((gamepad2.right_stick_y) * speed);
+            }
+            else{
+                extendArm.setPower(0);
+            }
+
+            if (gamepad2.right_trigger>0) {
+                gripLeft.setPosition(0.9);
+                gripRight.setPosition(0.9);
+            }
+            if (gamepad2.left_trigger > 0) {
+                gripLeft.setPosition(defaultPosition);
+                gripRight.setPosition(defaultPosition);
+            }
+
+
+            if(gamepad2.dpad_right)
+            {
+                gripLeft.setPosition((gripLeft.getPosition())+0.01);
+                gripRight.setPosition((gripRight.getPosition())+0.01);
+            }
+            if(gamepad2.dpad_left)
+            {
+                gripLeft.setPosition((gripLeft.getPosition())-0.01);
+                gripRight.setPosition((gripRight.getPosition())-0.01);
+            }
+            if(gamepad2.dpad_up){
+                gripLeft.setPosition(defaultPosition);
+                gripRight.setPosition(defaultPosition);
+            }
+
+            // Show the elapsed game time and wheel power.
+            telemetry.addData("Status", "Run Time: " + runtime.toString());
+            telemetry.addData("Motors", "left (%.2f), right (%.2f)");
+            telemetry.addData("Servos:", gripLeft.getPosition());
+            telemetry.update();
+        }
+    }
+}
+
