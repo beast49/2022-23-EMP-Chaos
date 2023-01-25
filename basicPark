@@ -26,7 +26,6 @@ public class basicPark extends LinearOpMode {
     static final double DRIVE_SPEED = 0.5;
     static final double TURN_SPEED = 0.3;
 
-
     DcMotor leftFront;
     DcMotor rightFront;
     DcMotor leftBack;
