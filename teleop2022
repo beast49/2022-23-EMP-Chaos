@@ -24,9 +24,8 @@ public class teleop2022 extends LinearOpMode {
     private DcMotor rightBack = null;
     private DcMotor raiseLeft = null;
     private DcMotor raiseRight = null;
-    private CRServo extendArm = null;
-    private Servo gripRight = null;
-    private Servo gripLeft = null;
+    private Servo grip = null;
+    private Servo flip = null;
 
     public void runOpMode() {
         telemetry.addData("Status", "Initialized");
@@ -38,29 +37,30 @@ public class teleop2022 extends LinearOpMode {
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
         raiseLeft = hardwareMap.get(DcMotor.class, "raiseLeft");
         raiseRight = hardwareMap.get(DcMotor.class, "raiseRight");
-        extendArm = hardwareMap.get(CRServo.class, "extendArm");
-        gripRight = hardwareMap.get(Servo.class, "gripRight");
-        gripLeft = hardwareMap.get(Servo.class, "gripLeft");
+        grip = hardwareMap.get(Servo.class, "grip");
+        flip = hardwareMap.get(Servo.class, "flip");
 
-        leftFront.setDirection(DcMotor.Direction.REVERSE);
+        leftFront.setDirection(DcMotor.Direction.FORWARD);
         rightFront.setDirection(DcMotor.Direction.REVERSE);
         leftBack.setDirection(DcMotor.Direction.FORWARD);
         rightBack.setDirection(DcMotor.Direction.REVERSE);
-        raiseLeft.setDirection(DcMotor.Direction.FORWARD);
+        raiseLeft.setDirection(DcMotor.Direction.REVERSE);
         raiseRight.setDirection(DcMotor.Direction.REVERSE);
-        gripLeft.setDirection(Servo.Direction.REVERSE);
+        grip.setDirection(Servo.Direction.FORWARD);
+        flip.setDirection(Servo.Direction.FORWARD);
 
         waitForStart();
         runtime.reset();
 
-        gripLeft.setPosition(0.2);
-        gripRight.setPosition(0.2);
+//        gripLeft.setPosition(0.2);
+//        gripRight.setPosition(0.2);
 
         while (opModeIsActive()) {
             double Threshold = .25;
             double playerOneSpeed = 1;
             double playerTwoSpeed = 1;
-            double defaultPosition = 0.2;
+            double defaultPosition = 0.65;
+            flip.setPosition(0.05);
 
             //speed adjustments
             if(gamepad1.b){
@@ -115,42 +115,31 @@ public class teleop2022 extends LinearOpMode {
                 raiseLeft.setPower(0);
                 raiseRight.setPower(0);
             }
-            if (Math.abs(gamepad2.right_stick_y) > Threshold) {
-                extendArm.setPower((gamepad2.right_stick_y) * playerTwoSpeed);
-            }
-            else{
-                extendArm.setPower(0);
-            }
 
             if (gamepad2.right_trigger>0) {
-                gripLeft.setPosition(0.9);
-                gripRight.setPosition(0.9);
+                grip.setPosition(1);
             }
             if (gamepad2.left_trigger > 0) {
-                gripLeft.setPosition(defaultPosition);
-                gripRight.setPosition(defaultPosition);
+                grip.setPosition(defaultPosition);
             }
 
 
             if(gamepad2.dpad_right)
             {
-                gripLeft.setPosition((gripLeft.getPosition())+0.01);
-                gripRight.setPosition((gripRight.getPosition())+0.01);
+                grip.setPosition((grip.getPosition())+0.01);
             }
             if(gamepad2.dpad_left)
             {
-                gripLeft.setPosition((gripLeft.getPosition())-0.01);
-                gripRight.setPosition((gripRight.getPosition())-0.01);
+                grip.setPosition((grip.getPosition())-0.01);
             }
             if(gamepad2.dpad_up){
-                gripLeft.setPosition(defaultPosition);
-                gripRight.setPosition(defaultPosition);
+                grip.setPosition(defaultPosition);
             }
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Motors", "left (%.2f), right (%.2f)");
-            telemetry.addData("Servos:", gripLeft.getPosition());
+            telemetry.addData("Servos:", grip.getPosition());
             telemetry.update();
         }
     }
