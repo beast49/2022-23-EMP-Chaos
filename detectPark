@@ -20,6 +20,7 @@ import org.openftc.easyopencv.OpenCvWebcam;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -40,15 +41,14 @@ public class detectPark extends LinearOpMode {
     static final double DRIVE_SPEED = 0.5;
     static final double TURN_SPEED = 0.3;
 
-    DcMotor leftFront = null;
-    DcMotor rightFront = null;
-    DcMotor leftBack = null;
-    DcMotor rightBack = null;
-    DcMotor raiseLeft = null;
-    DcMotor raiseRight = null;
-    CRServo extendArm = null;
-    Servo gripRight = null;
-    Servo gripLeft = null;
+    private DcMotor leftFront = null;
+    private DcMotor rightFront = null;
+    private DcMotor leftBack = null;
+    private DcMotor rightBack = null;
+    private DcMotor raiseLeft = null;
+    private DcMotor raiseRight = null;
+    private Servo grip = null;
+    private Servo flip = null;
 
     OpenCvCamera camera;
     FrenzyPipeline pipeline;
@@ -58,25 +58,23 @@ public class detectPark extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
-        //Assign variables to hardware map
         leftFront = hardwareMap.get(DcMotor.class, "leftFront");
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         leftBack = hardwareMap.get(DcMotor.class, "leftBack");
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
         raiseLeft = hardwareMap.get(DcMotor.class, "raiseLeft");
         raiseRight = hardwareMap.get(DcMotor.class, "raiseRight");
-        extendArm = hardwareMap.get(CRServo.class, "extendArm");
-        gripRight = hardwareMap.get(Servo.class, "gripRight");
-        gripLeft = hardwareMap.get(Servo.class, "gripLeft");
+        grip = hardwareMap.get(Servo.class, "grip");
+        flip = hardwareMap.get(Servo.class, "flip");
 
-        //set the direction of the motors, left goes forward, right goes backward
         leftFront.setDirection(DcMotor.Direction.REVERSE);
-        rightFront.setDirection(DcMotor.Direction.REVERSE);
-        leftBack.setDirection(DcMotor.Direction.FORWARD);
-        rightBack.setDirection(DcMotor.Direction.REVERSE);
+        rightFront.setDirection(DcMotor.Direction.FORWARD);
+        leftBack.setDirection(DcMotor.Direction.REVERSE);
+        rightBack.setDirection(DcMotor.Direction.FORWARD);
         raiseLeft.setDirection(DcMotor.Direction.FORWARD);
         raiseRight.setDirection(DcMotor.Direction.REVERSE);
-        gripLeft.setDirection(Servo.Direction.REVERSE);
+        grip.setDirection(Servo.Direction.FORWARD);
+        flip.setDirection(Servo.Direction.FORWARD);
 
         WebcamName cameraName = hardwareMap.get(WebcamName.class, "cam");
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
@@ -138,40 +136,50 @@ public class detectPark extends LinearOpMode {
         }
 
         // Wait for the game to start (driver presses PLAY)
+        positionValue = pipeline.returnPosition();
         waitForStart();
-
+        flip.setPosition(0.05);
+        grip.setPosition(1);
         //actual motion of robot
         runtime.reset();
-
-        gripLeft.setPosition(0.9);
-        gripRight.setPosition(0.9);
-
+        sleep(1000);
+        encoderDrive(0.5, 30, 30, 30, 30, 2.0);
+        sleep(1000);
+        encoderDrive(0.25, -25, -25, -25, -25, 2.0);
+        sleep(1000);
+        encoderDrive(0.25,-6,6,6,-6,2.0);
+        sleep(500);
+        runtime.reset();
+        while (runtime.seconds() < 1.0){ //3.5 seconds = HIGH  2 seconds = MEDIUM   1.5 seconds = LOW
+            raiseLeft.setPower(0.75);
+            raiseRight.setPower(0.75);
+        }
+        encoderDrive(0.25,3,3,3,3,2.0);
+        sleep(500);
+        grip.setPosition(0.65);
+        sleep(500);
+        grip.setPosition(1);
+        encoderDrive(0.25,-3,-3,-3,-3,2.0);
+        while (runtime.seconds() < 2.5){ //2.5 = LOW    3 = MEDIUM
+            raiseLeft.setPower(-0.25);
+            raiseRight.setPower(-0.25);
+        }
+        encoderDrive(0.25,7,-7,-7,7,2.0);
+        sleep(500);
+        raiseLeft.setPower(0);
+        raiseRight.setPower(0);
+        if(positionValue == 1){
+            encoderDrive(0.25,-17,17,17,-17,2.0);
+        }
+        else if(positionValue == 2){
+            encoderDrive(0.25, 0,0,0,0, 2.0);
+        }
+        else if(positionValue==3){
+            encoderDrive(0.25,24,-24,-24,24,2.0);
+            sleep(500);
+        }
         sleep(1000);
 
-        encoderDrive(0.4, -1,-1,-1,-1,200);
-        sleep(200);
-        encoderDrive(0.2, 3, -3, -3, 3, 200);
-        sleep(400);
-
-//        runtime.reset();
-//        while (runtime.seconds() < 1.5){ //3.5 seconds = HIGH  2 seconds = MEDIUM   1.5 seconds = LOW
-//            raiseLeft.setPower(0.75);
-//            raiseRight.setPower(0.75);
-//        }
-//
-//        sleep(300);
-//        encoderDrive(0.4, -1,-1,-1,-1,200);
-//        sleep(300);
-//
-//        gripLeft.setPosition(0.2);
-//        gripRight.setPosition(0.2);
-//        sleep(500);
-//
-//        runtime.reset();
-//        while (runtime.seconds() < 2.5){ //2.5 = LOW    3 = MEDIUM
-//            raiseLeft.setPower(-0.25);
-//            raiseRight.setPower(-0.25);
-//        }
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
@@ -179,8 +187,7 @@ public class detectPark extends LinearOpMode {
     }
 
     public void encoderDrive(double speed,
-                             double left1Inches, double right1Inches, double left2Inches, double right2Inches,
-                             double timeoutS) {
+                             double left1Inches, double right1Inches, double left2Inches, double right2Inches, double timeoutS) {
         int newLeftTarget;
         int newRightTarget;
         int newLeftBTarget;
@@ -191,10 +198,11 @@ public class detectPark extends LinearOpMode {
         if (opModeIsActive()) {
 
             // Determine new target position, and pass to motor controller
-            newLeftTarget = leftFront.getCurrentPosition() + (int) (left1Inches * COUNTS_PER_INCH);
-            newRightTarget = rightFront.getCurrentPosition() + (int) (right1Inches * COUNTS_PER_INCH);
-            newLeftBTarget = leftBack.getCurrentPosition() + (int) (left2Inches * COUNTS_PER_INCH);
-            newRightBTarget = rightBack.getCurrentPosition() + (int) (right2Inches * COUNTS_PER_INCH);
+
+            newLeftTarget = Math.abs(leftFront.getCurrentPosition() + (int) (left1Inches * COUNTS_PER_INCH));
+            newRightTarget = Math.abs(rightFront.getCurrentPosition() + (int) (right1Inches * COUNTS_PER_INCH));
+            newLeftBTarget = Math.abs(leftBack.getCurrentPosition() + (int) (left2Inches * COUNTS_PER_INCH));
+            newRightBTarget = Math.abs(rightBack.getCurrentPosition() + (int) (right2Inches * COUNTS_PER_INCH));
 
 
             leftFront.setTargetPosition(newLeftTarget);
@@ -220,12 +228,9 @@ public class detectPark extends LinearOpMode {
                     (runtime.seconds() < timeoutS) &&
                     (leftFront.isBusy() && rightFront.isBusy()) && (leftBack.isBusy() && rightBack.isBusy())) {
                 // Display it for the driver.
-                telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
-                telemetry.addData("Path2", "Running at %7d :%7d",
-                        leftFront.getCurrentPosition(),
-                        rightFront.getCurrentPosition(),
-                        leftBack.getCurrentPosition(),
-                        rightBack.getCurrentPosition());
+                telemetry.addData("Path1", "Running to %7d", newLeftTarget);
+                telemetry.addData("Path2", "Running at %7d",
+                        leftFront.getCurrentPosition());
                 telemetry.update();
             }
             // Stop all motion;
@@ -256,9 +261,9 @@ public class detectPark extends LinearOpMode {
         static final int width = 250;
         static final int height = 350;
 
-        final int one_low_threshold = 110;
+        final int one_low_threshold = 100;
         final int one_high_threshold = 125;
-        final int two_low_threshold = 155;
+        final int two_low_threshold = 150;
         final int two_high_threshold = 165;
         final int three_low_threshold = 130;
         final int three_high_threshold = 145;
